@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  db:
+    hostname: postgres-db
+    restart: always
+    image: 'postgres:latest'
+    env_file:
+      - "db.env"
+    ports:
+      - "3000:5432"

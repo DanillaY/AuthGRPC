@@ -1,0 +1,10 @@
+FROM golang:latest
+
+ENV GOPATH=/
+COPY ./ ./
+RUN go mod download
+RUN go build -v -o main .
+
+RUN go version && go mod verify
+
+CMD ["./main"]
