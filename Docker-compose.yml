@@ -7,5 +7,7 @@ services:
     image: 'postgres:latest'
     env_file:
       - "db.env"
+    volumes:
+      - .:/docker-entrypoint-initdb.d
     ports:
-      - "3000:5432"
+      - "3001:5432"

@@ -22,7 +22,7 @@ message LoginRequest {
     string password = 2;
     string phoneNumber  = 3;
     string gender = 4;
-    int64 userId = 5;
+    int64 appId = 5;
 }
 message LoginResponse{
     string jwt = 1;

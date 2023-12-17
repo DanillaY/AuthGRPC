@@ -16,15 +16,14 @@ type App struct {
 	port   string
 }
 
-func New(logger slog.Logger, port string, expToken time.Duration) *App {
+func New(logger slog.Logger, port string, expToken time.Duration, auth server.IAuth) *App {
 	grpc := grpc.NewServer()
-	//TODO: убрать интерфейс-затычку
-	var auth server.IAuth
+
 	server.RegisterServer(grpc, auth)
 	return &App{logger: &logger, grpc: grpc, port: port}
 }
 func (a *App) Run() error {
-	log := a.logger
+	log := a.logger.With(slog.String("port", a.port))
 	log.Info("Starting grpc server")
 
 	l, err := net.Listen("tcp", a.port)
@@ -37,8 +36,6 @@ func (a *App) Run() error {
 	}
 
 	log.Info("Server is running ", slog.String("addres", l.Addr().String()))
-	log.Info("test", l.Addr().String())
-
 	return nil
 }
 

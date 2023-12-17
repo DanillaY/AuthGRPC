@@ -11,14 +11,14 @@ import (
 )
 
 type Auth struct {
-	log           *slog.Logger
-	tokenLifeTime time.Duration
-	base          IDatabase
-	app           IApp
+	Log           *slog.Logger
+	TokenLifeTime time.Duration
+	Base          IDatabase
+	App           IApp
 }
 
 type IDatabase interface {
-	CreateUser(ctx context.Context, email string, passHash []byte) (id int64, err error)
+	CreateUser(ctx context.Context, email string, gender string, phoneNumber string, passHash []byte) (id int64, err error)
 	ValidateUser(ctx context.Context, email string) (user models.User, err error)
 }
 type IApp interface {
@@ -28,44 +28,44 @@ type IApp interface {
 func New(logger *slog.Logger, tokenLifetime time.Duration, base IDatabase, app IApp) *Auth {
 
 	return &Auth{
-		log:           logger,
-		tokenLifeTime: tokenLifetime,
-		base:          base,
-		app:           app,
+		Log:           logger,
+		TokenLifeTime: tokenLifetime,
+		Base:          base,
+		App:           app,
 	}
 }
 
 func (a *Auth) Login(ctx context.Context, email string, gender string, password string, phoneNumber string, appID int64) (token string, err error) {
-	a.log.Info("Loggin a user")
-	user, err := a.base.ValidateUser(ctx, email)
+	a.Log.Info("Loggin a user")
+	user, err := a.Base.ValidateUser(ctx, email)
 	if err != nil {
-		a.log.Error("No such user ")
+		a.Log.Error("No such user ")
 	}
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(password)); err != nil {
-		a.log.Error("Wrong credentials")
+		a.Log.Error("Wrong credentials")
 	}
-	app, err := a.app.App(ctx, appID)
+	app, err := a.App.App(ctx, appID)
 	if err != nil {
-		a.log.Error("No such app")
+		a.Log.Error("No such app")
 	}
 
-	jwtToken, err := jwt.GenNewToken(user, app, a.tokenLifeTime)
+	jwtToken, err := jwt.GenNewToken(user, app, a.TokenLifeTime)
 	if err != nil {
-		a.log.Error("Could not generate new token")
+		a.Log.Error("Could not generate new token")
 	}
 	return jwtToken, nil
 
 }
 func (a *Auth) Register(ctx context.Context, email string, gender string, phoneNumber string, password string) (userID int64, err error) {
-	a.log.Info("Registering a user")
+	a.Log.Info("Registering a user")
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		a.log.Error("Could not create hash")
+		a.Log.Error("Could not create hash")
 	}
 
-	id, err := a.base.CreateUser(ctx, email, hash)
+	id, err := a.Base.CreateUser(ctx, email, gender, phoneNumber, hash)
 	if err != nil {
-		a.log.Error("Could not register new user")
+		a.Log.Error("Could not register new user")
 	}
 	return id, nil
 }

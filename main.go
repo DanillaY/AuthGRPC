@@ -2,7 +2,8 @@ package main
 
 import (
 	rpcLogger "main/common"
-	"main/internal/app"
+	grpcapp "main/internal"
+
 	"main/internal/config"
 	"os"
 	"os/signal"
@@ -12,13 +13,12 @@ import (
 func main() {
 	logger := rpcLogger.SetupLogger()
 	cfg := config.New(*logger)
-	application := app.New(*logger, cfg.Port, cfg.TokenLifetime)
-
-	application.Run()
+	application := grpcapp.New(*logger, cfg.Port, cfg.Host, cfg.User, cfg.Password, cfg.TokenLifetime)
+	application.Grpc.Run()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 	<-stop
-	application.Stop()
+	application.Grpc.Stop()
 	//TODO собрать весь jrpc тут
 }
