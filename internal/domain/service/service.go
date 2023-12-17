@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"main/internal/domain/jwt"
 	"main/internal/domain/models"
@@ -35,28 +36,28 @@ func New(logger *slog.Logger, tokenLifetime time.Duration, base IDatabase, app I
 	}
 }
 
-func (a *Auth) Login(ctx context.Context, email string, gender string, password string, phoneNumber string, appID int64) (token string, err error) {
+func (a *Auth) Login(ctx context.Context, email string, password string, phoneNumber string, gender string, appID int64) (token string, err error) {
 	a.Log.Info("Loggin a user")
-	user, err := a.Base.ValidateUser(ctx, email)
-	if err != nil {
-		a.Log.Error("No such user ")
-	}
+	user, _ := a.Base.ValidateUser(ctx, email)
+
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(password)); err != nil {
-		a.Log.Error("Wrong credentials")
+		return "", errors.New("Wrong credentials")
 	}
 	app, err := a.App.App(ctx, appID)
 	if err != nil {
-		a.Log.Error("No such app")
+		return "", errors.New("No such app")
 	}
 
 	jwtToken, err := jwt.GenNewToken(user, app, a.TokenLifeTime)
 	if err != nil {
 		a.Log.Error("Could not generate new token")
 	}
+
+	a.Log.Info("Successfuly logged in a user")
 	return jwtToken, nil
 
 }
-func (a *Auth) Register(ctx context.Context, email string, gender string, phoneNumber string, password string) (userID int64, err error) {
+func (a *Auth) Register(ctx context.Context, email string, password string, phoneNumber string, gender string) (userID int64, err error) {
 	a.Log.Info("Registering a user")
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -64,8 +65,10 @@ func (a *Auth) Register(ctx context.Context, email string, gender string, phoneN
 	}
 
 	id, err := a.Base.CreateUser(ctx, email, gender, phoneNumber, hash)
-	if err != nil {
+	if err != nil && id != -1 {
 		a.Log.Error("Could not register new user")
 	}
+
+	a.Log.Info("Successfuly registered new user")
 	return id, nil
 }

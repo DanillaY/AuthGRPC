@@ -17,21 +17,25 @@ type PGDatabase struct {
 
 func New(logger slog.Logger, host string, user string, password string, port string) (db *PGDatabase, err error) {
 	var base PGDatabase
-	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=postgres" + " port=" + port
-
+	//dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=postgres" + " port=" + port
+	//TO DO fixport
+	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=Users" + " port=5432" + " sslmode=disable"
 	pg, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		logger.Error("Could not connect to database")
 	}
 	base.logger = logger
 	base.db = pg
+	base.db.AutoMigrate(&models.App{}, &models.User{})
 	return &base, nil
 }
 
-// App implements auth.IApp.
 func (pg *PGDatabase) App(ctx context.Context, appID int64) (app models.App, err error) {
 	var appD models.App
 	pg.db.Where("ID = ?", appID).First(&appD)
+	if appD.ID == 0 {
+		return models.App{}, errors.New("No such app")
+	}
 	return appD, nil
 }
 

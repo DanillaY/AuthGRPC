@@ -20,5 +20,4 @@ func main() {
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 	<-stop
 	application.Grpc.Stop()
-	//TODO собрать весь jrpc тут
 }

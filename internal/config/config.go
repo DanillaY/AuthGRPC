@@ -23,7 +23,7 @@ func New(logger slog.Logger) *Config {
 		logger.Error("Could not find or parse .env file")
 	}
 	checkEnvFle("./internal/config/config.env", logger)
-	checkEnvFle("./config.env", logger)
+	checkEnvFle("./db.env", logger)
 
 	port := checkFilledEnv("GRPC_PORT", logger)
 	timeout := checkFilledEnv("TIMEOUT", logger)
